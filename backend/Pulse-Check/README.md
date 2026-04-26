@@ -117,8 +117,8 @@ pulse-check-api/
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/pulse-check-api.git
-cd pulse-check-api
+git clone https://github.com/CynthiaAdeline/AmaliTech-DEG-Project-based-challenges.git
+cd AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check
 ```
 
 ---
@@ -189,7 +189,7 @@ All 20 tests should pass.
 ### Base URL
 
 ```
-http://localhost:8000
+https://amalitech-deg-project-based-challenges-c1mx.onrender.com
 ```
 
 ---
