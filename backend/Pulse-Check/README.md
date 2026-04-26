@@ -1,4 +1,4 @@
-
+<img width="1536" height="1024" alt="state diagram" src="https://github.com/user-attachments/assets/72819482-ee85-4415-b02f-4255ef42b523" />
 
 =======
 # Pulse-Check API — Watchdog Sentinel
@@ -44,27 +44,19 @@ The Pulse-Check API implements a **Dead Man's Switch** pattern:
 
 Each monitor is a finite state machine with three states:
 
-![alt text](<state diagram.png>)
+<img width="1536" height="1024" alt="state diagram" src="https://github.com/user-attachments/assets/d29879e5-30f8-4165-bee4-3b44f953a66e" />
 
-| From   | Event     | To     | Notes                           |
-|--------|-----------|--------|---------------------------------|
-| ACTIVE | heartbeat | ACTIVE | Timer reset to full timeout     |
-| ACTIVE | pause     | PAUSED | Timer frozen, no alerts         |
-| ACTIVE | timeout   | DOWN   | Alert fires exactly once        |
-| PAUSED | heartbeat | ACTIVE | Auto-resume + timer reset       |
-| PAUSED | pause     | PAUSED | No-op (already paused)          |
-| DOWN   | heartbeat | ACTIVE | Revive + timer reset            |
-| DOWN   | pause     | —      | 409 Conflict                    |
 
 ---
 
 ### Sequence Diagram — Monitor Lifecycle
 
-![alt text](<Sequence monitor.PNG>)
+<img width="672" height="310" alt="Sequence monitor" src="https://github.com/user-attachments/assets/5122c431-1e92-4223-8ebe-5abf3cc9d4e4" />
 
 ### Sequence Diagram — Pause / Resume
 
-![alt text](<Sequence pause and resume.PNG>)
+<img width="672" height="135" alt="Sequence pause and resume" src="https://github.com/user-attachments/assets/c35292a3-c0a0-4c84-aa55-7d579f33cd86" />
+
 ---
 
 ### Project Structure
