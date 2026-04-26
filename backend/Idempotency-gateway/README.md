@@ -20,12 +20,10 @@ A production-quality FastAPI service that guarantees a payment is processed **ex
 11. [Developer's Choice — TTL Expiration](#-developers-choice--ttl-expiration)
 12. [Limitations & Trade-offs](#-limitations--trade-offs)
 13. [Production Considerations](#-production-considerations)
-14. [Key Takeaways](#-key-takeaways)
-15. [Interview Explanation](#-interview-explanation)
 
 ---
 
-## 🚀 Project Overview
+## Project Overview
 
 ### The Problem
 
@@ -46,9 +44,9 @@ The result: clients can retry as aggressively as they need to. The customer is n
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
-![Architecture Diagram](images/architecture-diagram.png)
+<img width="1536" height="1024" alt="System design for Idempotency" src="https://github.com/user-attachments/assets/4066b99f-7bba-4883-812d-57f31800cd2f" />
 
 ### Components
 
@@ -86,7 +84,7 @@ Each record stored per `Idempotency-Key`:
 
 ---
 
-## 🔄 Request Flow
+## Request Flow
 
 ### First Request
 - Key is not in the store
@@ -117,60 +115,13 @@ Each record stored per `Idempotency-Key`:
 
 ---
 
-## 📊 Sequence Diagram
+## Sequence Diagram
 
-![Sequence Diagram](images/sequence-diagram.png)
-
-```
-1. NEW REQUEST (first time)
-──────────────────────────────────────────────────────────────────────
-Client  →  API Layer        POST /process-payment (Idempotency-Key: abc123)
-           API Layer  →  Store      Store.get(abc123)
-                          Store  →  API Layer   [NOT FOUND]
-           API Layer  →  Store      Store.create(abc123, status="processing", event=Event())
-           API Layer  →  Processor  process_payment(amount, currency)  [await 2s]
-                          Processor →  API Layer  payment success
-           API Layer  →  Store      Store.complete(abc123, status="completed", response, hash)
-Client  ←  API Layer        201 Created  {"message": "Charged 100 GHS"}
-
-
-2. DUPLICATE REQUEST (same key + same body)
-──────────────────────────────────────────────────────────────────────
-Client  →  API Layer        POST /process-payment (Idempotency-Key: abc123)
-           API Layer  →  Store      Store.get(abc123)
-                          Store  →  API Layer   [FOUND, status="completed", hash ✓]
-Client  ←  API Layer        201 Created  stored body  +  X-Cache-Hit: true  (instant)
-
-
-3. CONFLICT REQUEST (same key + different body)
-──────────────────────────────────────────────────────────────────────
-Client  →  API Layer        POST /process-payment (Idempotency-Key: abc123, amount: 200)
-           API Layer  →  Store      Store.get(abc123)
-                          Store  →  API Layer   [FOUND, hash mismatch ✗]
-Client  ←  API Layer        409 Conflict  "Idempotency key already used for a different request body."
-
-
-4. IN-FLIGHT (concurrent duplicate)
-──────────────────────────────────────────────────────────────────────
-Client_A  →  API Layer      POST /process-payment (Idempotency-Key: abc123)
-             API Layer  →  Store    Store.create(abc123, status="processing", event=Event())
-             API Layer  →  Processor  process_payment()  [await 2s]  ...processing...
-
-Client_B  →  API Layer      POST /process-payment (Idempotency-Key: abc123)
-             API Layer  →  Store    Store.get(abc123)
-                            Store  →  API Layer  [FOUND, status="processing"]
-             API Layer      await event.wait()  ...blocking...
-
-                            Processor  →  API Layer  payment success
-             API Layer  →  Store    Store.complete(abc123, status="completed")  →  event.set()
-
-Client_B  ←  API Layer      201 Created  stored body  +  X-Cache-Hit: true
-Client_A  ←  API Layer      201 Created  {"message": "Charged 100 GHS"}
-```
+<img width="1536" height="1024" alt="sequence diagram for Idempotency" src="https://github.com/user-attachments/assets/cea942c4-5258-4cfe-898f-54eeae662103" />
 
 ---
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 
@@ -201,7 +152,7 @@ Interactive Swagger docs: `http://127.0.0.1:8000/docs`
 
 ---
 
-## 📡 API Documentation
+## API Documentation
 
 ### `POST /process-payment`
 
@@ -276,7 +227,7 @@ Liveness probe — returns immediately with no side effects.
 
 ---
 
-## 🧪 Testing Guide
+## Testing Guide
 
 These tests validate every acceptance criterion in sequence. Each test builds on the previous one — **the key must be reused deliberately** to prove idempotency behavior. Changing the key on every request would simply create new records and prove nothing.
 
@@ -401,7 +352,7 @@ curl -i -X POST http://127.0.0.1:8000/process-payment \
 
 ---
 
-## 📸 Proof of Functionality
+## Proof of Functionality
 
 The following screenshots validate all acceptance criteria and system behaviors against a live running instance of the server.
 
@@ -409,7 +360,7 @@ The following screenshots validate all acceptance criteria and system behaviors 
 
 ### Test 1 — First Request (201 Created, 2.13s)
 
-![First Request](images/test1-first-request.png)
+<img width="868" height="569" alt="1st Request test" src="https://github.com/user-attachments/assets/9f84f056-e9e6-412b-97ea-b8452d026c56" />
 
 First request with `Idempotency-Key: random-123456`. The **2.13-second** response time confirms the simulated payment delay executed. Status `201 Created`. No `X-Cache-Hit` header — this is a genuine first-time charge stored in the idempotency record.
 
@@ -417,7 +368,7 @@ First request with `Idempotency-Key: random-123456`. The **2.13-second** respons
 
 ### Test 2 — Duplicate Request (201 Created, 39ms, X-Cache-Hit: true)
 
-![Duplicate Request Headers](images/test2-duplicate-headers.png)
+<img width="641" height="567" alt="Duplicate_test2" src="https://github.com/user-attachments/assets/a3d3e506-868d-4bcd-b56c-291ab36c25e6" />
 
 Same key, same body sent again. Response time drops to **39ms** — the payment processor was never called. Response headers confirm `x-cache-hit: true`. The stored response is replayed verbatim.
 
@@ -427,6 +378,7 @@ First request headers shown for direct comparison — no `x-cache-hit`, response
 ---
 
 ### Test 3 — Conflict Request (409 Conflict, 45ms)
+<img width="870" height="571" alt="Test3 Conflict Request" src="https://github.com/user-attachments/assets/b187e503-14a2-477e-a61c-5d960e87cdac" />
 
 Same key reused with a different `amount`. The SHA-256 hash mismatch is detected in **45ms** and the request is rejected with `409 Conflict`. The payment processor is never reached. Error message is exact: `"Idempotency key already used for a different request body."`
 
@@ -441,7 +393,7 @@ Request B fires with the same key and body while A is still processing. It suspe
 
 ---
 
-## 🧠 Design Decisions
+## Design Decisions
 
 ### Why FastAPI?
 
@@ -463,7 +415,7 @@ Three mechanisms work together:
 
 ---
 
-## 🔒 Concurrency & In-Flight Handling
+## Concurrency & In-Flight Handling
 
 **Summary:** Two simultaneous requests with the same key will never trigger two charges. The second request waits cooperatively for the first to finish, then returns the same result. This is guaranteed by Python's single-threaded event loop and an `asyncio.Event` per record.
 
@@ -505,7 +457,7 @@ The `inflight_record` local reference is retained before `await event.wait()` as
 
 ---
 
-## 🌟 Developer's Choice — TTL Expiration
+## Developer's Choice — TTL Expiration
 
 ### What Was Implemented
 
@@ -552,7 +504,7 @@ The assessment specifies an in-memory store and a single-process server. The ide
 
 ---
 
-## 🚀 Production Considerations
+## Production Considerations
 
 A production deployment of this system would require the following additions:
 
