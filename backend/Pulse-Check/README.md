@@ -37,6 +37,28 @@ The Pulse-Check API implements a **Dead Man's Switch** pattern:
 ---
 
 ## 2. Architecture Diagram
+### System Architecture
+
+```mermaid
+graph TD
+    Client([HTTP Client]) -->|POST /monitors| Controller
+    Client -->|POST /monitors/id/heartbeat| Controller
+    Client -->|POST /monitors/id/pause| Controller
+    Client -->|GET /monitors| Controller
+    Client -->|DELETE /monitors/id| Controller
+
+    Controller[Controller<br/>monitor_controller.py] -->|calls| Service
+    Service[Service<br/>monitor_service.py] -->|reads/writes| Store
+    Service -->|uses| Utils
+    Store[Store<br/>monitor_store.py] -->|holds| Model
+    Model[Model<br/>monitor_model.py]
+    Scheduler[Scheduler<br/>monitor_scheduler.py] -->|polls every 1s| Store
+    Scheduler -->|fires alert via| Service
+    Utils[Utils<br/>time_utils.py]
+```
+
+---
+
 
 ### State Machine
 
