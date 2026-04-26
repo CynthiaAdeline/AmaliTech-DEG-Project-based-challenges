@@ -1,5 +1,3 @@
-<img width="1536" height="1024" alt="state diagram" src="https://github.com/user-attachments/assets/72819482-ee85-4415-b02f-4255ef42b523" />
-
 =======
 # Pulse-Check API — Watchdog Sentinel
 
